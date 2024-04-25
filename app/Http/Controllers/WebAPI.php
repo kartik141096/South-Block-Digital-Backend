@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
+use App\Models\Category;
+use App\Models\Category_Slave;
+use App\Models\News;
+use App\Models\News_Slave;
 
 class WebAPI extends Controller
 {
@@ -27,15 +31,66 @@ class WebAPI extends Controller
             $weatherData['location']['date'] = date("D, j M Y");
             $weatherData['current']['condition']['icon'] = str_replace("//","",$weatherData['current']['condition']['icon']);
 
-            // dd($weatherData);
-
             return json_encode($weatherData);
         }else {
             $error = $response->status();
-            // dd("Error occurred: $error");
         }
     }
-    public function get_data(){
-        echo "Kartik";
+    
+    public function get_category(){
+
+        $categories = Category::with('slaves')->get();
+        // $category_list['category_master'] = array();
+        // $category_list['category_slave'] = array();
+        
+        foreach ($categories as $category) {
+            $categoryData = [
+                'category_name' => $category->name,
+                'slaves' => []
+            ];
+        
+            foreach ($category->slaves as $slave) {
+                $categoryData['slaves'][] = [$slave->name];
+            }
+        
+            $categoriesData[] = $categoryData;
+        }
+        return json_encode($categoriesData);
+    }
+
+    public function get_news_list(){
+
+        $i=0;
+
+        $dbNews = News::with('slaves')->get();
+
+        foreach ($dbNews as $news) {
+            $newsData[] = [
+                'id' => $news->id,
+                'category_id' => $news->category_id,
+                'heading' => $news->heading,
+                'paragraph' => $news->paragraph,
+                'img' => $news->img,
+                'tag' => $news->tag,
+                'created_by' => $news->created_by,
+                'is_active' => $news->is_active,
+                'is_deleted' => $news->is_deleted,
+                'created_at' => $news->created_at,
+                'updated_at' => $news->updated_at,
+                'slaves' => []
+            ];
+        
+            foreach ($news->slaves as $slave) {
+                $newsData[$i]['slaves'][] = [
+
+                    'sub_heading' => $slave->sub_heading,
+                    'paragraph' => $slave->paragraph,
+                    'img' => $slave->img,
+                ];
+            }
+            $i++;
+        }
+            // dd($newsData);
+        return json_encode($newsData);
     }
 }
