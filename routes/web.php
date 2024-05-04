@@ -17,6 +17,3 @@ use App\Http\Controllers\WebAPI;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
-Route::get('/get-weather', [WebAPI::class, 'get_weather']);
-Route::get('/get-category', [WebAPI::class, 'get_category']);
-Route::get('/get-news-list', [WebAPI::class, 'get_news_list']);
