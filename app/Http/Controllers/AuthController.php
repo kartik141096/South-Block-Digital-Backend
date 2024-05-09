@@ -43,7 +43,6 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 422);
         }
-        
         // dd(bcrypt($request->password));
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
