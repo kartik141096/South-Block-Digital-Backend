@@ -40,21 +40,31 @@ class WebAPI extends Controller
     public function get_category(){
 
         $categories = Category::with('slaves')->get();
-        // $category_list['category_master'] = array();
-        // $category_list['category_slave'] = array();
-        
         foreach ($categories as $category) {
-            $categoryData = [
-                'category_name' => $category->name,
-                'slaves' => []
-            ];
-        
-            foreach ($category->slaves as $slave) {
-                $categoryData['slaves'][] = [$slave->name];
+            if($category->is_deleted == 0){
+
+                $categoryData = [
+                    'category_id' => $category->id,
+                    'category_name' => $category->name,
+                    'is_active' => $category->is_active,
+                    'slaves' => []
+                ];
+                $v=0;
+                foreach ($category->slaves as $slave) {
+
+                    if($slave ->is_deleted == 0){
+
+                        $categoryData['slaves'][$v]['subcategory_id'] = $slave->id;
+                        $categoryData['slaves'][$v]['subcategory_name'] = $slave->name;
+                        $categoryData['slaves'][$v]['is_active'] = $slave->is_active;
+                    }
+                    $v++;
+                }
+                
+                $categoriesData[][] = $categoryData;
             }
-        
-            $categoriesData[] = $categoryData;
         }
+        // return $categoriesData;
         return json_encode($categoriesData);
     }
 
