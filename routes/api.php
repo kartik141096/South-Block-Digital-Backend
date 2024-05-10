@@ -5,27 +5,22 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebAPI;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+// Auth Routes
+Route::POST('/register', [AuthController::class, 'register']);
+Route::POST('/login', [AuthController::class, 'login']);
+Route::POST('/logout', [AuthController::class, 'logout']);
+Route::POST('/forgot-password', [AuthController::class, 'forgotpassword']);
+Route::POST('/is-loged-in', [AuthController::class, 'is_loged_in']);
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
+// Weather Routes
+Route::GET('/get-weather', [WebAPI::class, 'get_weather']);
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
-Route::post('/forgot-password', [AuthController::class, 'forgotpassword']);
-Route::post('/is-loged-in', [AuthController::class, 'is_loged_in']);
 
-Route::get('/get-weather', [WebAPI::class, 'get_weather']);
-Route::get('/get-category', [WebAPI::class, 'get_category']);
-Route::get('/get-news-list', [WebAPI::class, 'get_news_list']);
+// Category Routes
+Route::GET('/get-category', [WebAPI::class, 'get_category']);
+Route::POST('/update-category', [WebAPI::class, 'update_category']);
+
+
+
+// News Routes
+Route::GET('/get-news-list', [WebAPI::class, 'get_news_list']);

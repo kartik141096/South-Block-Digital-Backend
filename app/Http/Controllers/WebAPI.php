@@ -37,7 +37,8 @@ class WebAPI extends Controller
         }
     }
     
-    public function get_category(){
+    public function get_category()
+    {
 
         $categories = Category::with('slaves')->get();
         foreach ($categories as $category) {
@@ -68,7 +69,8 @@ class WebAPI extends Controller
         return json_encode($categoriesData);
     }
 
-    public function get_news_list(){
+    public function get_news_list()
+    {
 
         $i=0;
 
@@ -102,5 +104,43 @@ class WebAPI extends Controller
         }
             // dd($newsData);
         return json_encode($newsData);
+    }
+
+    public function update_category(Request $request)
+    {
+        $data = $request->only('id','name','is_parent','is_active','is_deleted');
+        $status = FALSE;
+        $updateData = [];
+        
+        if (isset($data['id']) && $data['id']!= NULL){
+
+            if (isset($data['name']) && $data['name']!= NULL) {
+                $updateData['name'] = $data['name'];
+            }
+            if (isset($data['is_parent']) && $data['is_parent']!= NULL) {
+                $updateData['is_parent'] = $data['is_parent'];
+            }
+            if (isset($data['is_active']) && $data['is_active']!= NULL) {
+                $updateData['is_active'] = $data['is_active'];
+            }
+            if (isset($data['is_deleted']) && $data['is_deleted']!= NULL) {
+                $updateData['is_deleted'] = $data['is_deleted'];
+            }
+
+            if (!empty($updateData)) {
+    
+                $rowsAffected = Category::where('id', $data['id'])->update($updateData);
+    
+                if ($rowsAffected > 0) {
+
+                    $status = TRUE;
+                } else {
+
+                    $status = FALSE;
+                }
+            }
+        }
+        return $status;
+
     }
 }
