@@ -11,6 +11,7 @@ use App\Models\News_Slave;
 
 class WebAPI extends Controller
 {
+    // Weather APIs ======================================================================================================================================================
     public function get_weather()
     {   
         if($_SERVER['REMOTE_ADDR'] == "127.0.0.1")
@@ -37,28 +38,116 @@ class WebAPI extends Controller
         }
     }
     
-    public function get_category(){
+
+
+    // Category APIs =====================================================================================================================================================
+    public function add_category(request $request)
+    {
+        $data = $request->only('name');
+        $data['name'] = filter_var($data['name'], FILTER_SANITIZE_STRING);
+        
+        $id = Category::insertGetId($data);
+        return $id;
+    }
+
+    public function add_sub_category(request $request)
+    {
+        $data = $request->only('category_id','name');
+
+
+        $data['category_id'] = filter_var($data['category_id'], FILTER_SANITIZE_STRING);
+        $data['name'] = filter_var($data['name'], FILTER_SANITIZE_STRING);
+        
+        $id = Category_Slave::insertGetId($data);
+        return $id;
+    }
+    
+    public function get_category()
+    {
 
         $categories = Category::with('slaves')->get();
-        // $category_list['category_master'] = array();
-        // $category_list['category_slave'] = array();
-        
         foreach ($categories as $category) {
-            $categoryData = [
-                'category_name' => $category->name,
-                'slaves' => []
-            ];
-        
-            foreach ($category->slaves as $slave) {
-                $categoryData['slaves'][] = [$slave->name];
+            if($category->is_deleted == 0){
+
+                $categoryData = [
+                    'category_id' => $category->id,
+                    'category_name' => $category->name,
+                    'is_active' => (int)$category->is_active,
+                    'is_parent' => (int)$category->is_parent,
+                    'slaves' => []
+                ];
+                $v=0;
+                foreach ($category->slaves as $slave) {
+
+                    if($slave ->is_deleted == 0){
+
+                        $categoryData['slaves'][$v]['subcategory_id'] = $slave->id;
+                        $categoryData['slaves'][$v]['subcategory_name'] = $slave->name;
+                        $categoryData['slaves'][$v]['is_active'] = (int)$slave->is_active;
+                    }
+                    $v++;
+                }
+                
+                $categoriesData[][] = $categoryData;
             }
-        
-            $categoriesData[] = $categoryData;
         }
+        // return $categoriesData;
         return json_encode($categoriesData);
     }
 
-    public function get_news_list(){
+    public function update_category(Request $request)
+    {
+        $data = $request->only('id','name','is_parent','is_active','is_deleted');
+        $status = FALSE;
+        $updateData = [];
+        
+        if (isset($data['id']) && $data['id']!= NULL){
+    
+            $rowsAffected = Category::where('id', $data['id'])->update($data);
+
+            if ($rowsAffected > 0) {
+
+                $status = TRUE;
+            } else {
+
+                $status = FALSE;
+            }
+        }
+        return $status;
+    }
+    
+    public function update_sub_category(Request $request)
+    {
+        $data = $request->only('id','name','is_active','is_deleted');
+        $status = FALSE;
+        $updateData = [];
+        
+        if (isset($data['id']) && $data['id']!= NULL){
+    
+            $rowsAffected = Category_Slave::where('id', $data['id'])->update($data);
+
+            if ($rowsAffected > 0) {
+
+                $status = TRUE;
+            } else {
+
+                $status = FALSE;
+            }
+        }
+        return $status;
+    }
+
+
+
+    // News APIs ===========================================================================================================================================================
+    public function add_news(Request $request)
+    {
+        return $request;
+       
+    }
+
+    public function get_news_list()
+    {
 
         $i=0;
 
