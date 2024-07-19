@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Category_Slave;
 use App\Models\News;
 use App\Models\News_Slave;
+use App\Models\News_Tags;
 
 class WebAPI extends Controller
 {
@@ -38,8 +39,6 @@ class WebAPI extends Controller
         }
     }
     
-
-
     // Category APIs =====================================================================================================================================================
     public function add_category(request $request)
     {
@@ -140,15 +139,113 @@ class WebAPI extends Controller
 
 
     // News APIs ===========================================================================================================================================================
+    // public function add_news(Request $request)
+    // {
+    //     $data['is_active'] = $request->is_active;
+    //     $data['category_id'] = $request->category_id;
+    //     $data['tag'] = $request->tags_id;
+    //     $data['heading'] = $request->heading;
+    //     $data['paragraph'] = $request->paragraph;
+    //     $data['img'] = $request->img;
+    //     $data['created_by'] = 'Admin';
+    //     $data['created_at'] = $data['updated_at'] = date("Y-m-d",time());
+
+    //     $name = $_FILES['img']['name']->getClientOriginalName();
+    //     $fileNameOnly = pathinfo($_FILES['img']['name'], PATHINFO_FILENAME);
+    //     $extension = $_FILES['img']['name']->getClientOriginalExtension();
+
+    //     $id = News::insertGetId($data);
+
+    //     $slave = $request->slave;
+        
+        
+    //     for($i=0; $i<count($slave); $i++){
+    //         $slave[$i]['news_id'] = $id;
+    //         $slave[$i]['created_at'] = $slave[$i]['updated_at'] = date("Y-m-d",time());
+    //         News_Slave::insert($slave[$i]);
+    //     }
+    // }
+
+
     public function add_news(Request $request)
-    {
-        return $request;
-       
+{
+    // Validate incoming request
+    // $validatedData = $request->validate([
+    //     'is_active' => 'required|boolean',
+    //     'category_id' => 'required|integer',
+    //     'tags_id' => 'required|integer',
+    //     'heading' => 'required|string',
+    //     'paragraph' => 'required|string',
+    //     'slave' => 'required|array',
+    //     'slave.*.sub_heading' => 'nullable|string',
+    //     'slave.*.paragraph' => 'nullable|string',
+    // ]);
+
+    // Handle main image upload using $_FILES['img']
+    if (isset($_FILES['img']) && $_FILES['img']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['img'];
+        return $file;
+        $fileName = $file['name'];
+        $fileNameOnly = pathinfo($fileName, PATHINFO_FILENAME);
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        $fileNameToStore = $fileNameOnly . '_' . time() . '.' . $extension;
+
+        // Move uploaded file to storage directory (public/uploads)
+        move_uploaded_file($file['tmp_name'], public_path('storage/news' . $fileNameToStore));
+
+        // Save file path in database
+        $validatedData['category_id'] = $request['category_id'];
+        $validatedData['img'] = 'storage/news' . $fileNameToStore;
+    } else {
+        return response()->json(['message' => 'No file uploaded or error occurred'], 400);
+    }
+
+    // Add additional data
+    $validatedData['created_by'] = 'Admin';
+    $validatedData['created_at'] = now();
+    $validatedData['updated_at'] = now();
+
+    // Create news entry
+    $news = News::create($validatedData);
+    $newsId = $news->id;
+
+    // Handle news_slave entries
+    foreach ($request->slave as $slave) {
+        $slaveData = [
+            'news_id' => $newsId,
+            'sub_heading' => $slave['sub_heading'] ?? null,
+            'paragraph' => $slave['paragraph'] ?? null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        // Insert news_slave record
+        News_Slave::create($slaveData);
+    }
+
+    return response()->json(['message' => 'News added successfully'], 201);
+}
+
+    public function filter_news(Request $request)
+    {   
+        $where = '1';
+
+        if($request['tag_id'] != '0')
+            $where = $where." and tag=".$request['tag_id'];
+        
+        if($request['category'] != 0 && ($request['sub_category'] == 0))
+            $where = $where." and category_id=".$request['category'];
+
+        $dbnews = News::with('slaves')
+              ->whereRaw($where)
+              ->get();
+        // $dbnews = News::with('slaves')->where('tag', $request['tag_id'])->get();
+
+        return $dbnews;
     }
 
     public function get_news_list()
     {
-
         $i=0;
 
         $dbNews = News::with('slaves')->get();
@@ -181,5 +278,13 @@ class WebAPI extends Controller
         }
             // dd($newsData);
         return json_encode($newsData);
+    }
+
+
+    // News Tags ======================================================================================================================================
+    public function get_news_tags()
+    {
+        $News_tags = News_Tags::all();
+        return json_encode($News_tags);
     }
 }

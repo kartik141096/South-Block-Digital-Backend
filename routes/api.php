@@ -28,3 +28,7 @@ Route::POST('/update-sub-category', [WebAPI::class, 'update_sub_category']);
 // News Routes
 Route::GET('/get-news-list', [WebAPI::class, 'get_news_list']);
 Route::POST('/add-news', [WebAPI::class, 'add_news']);
+Route::POST('/filter-news', [WebAPI::class, 'filter_news']);
+
+// News tags
+Route::GET('/get-news-tags', [WebAPI::class, 'get_news_tags']);
